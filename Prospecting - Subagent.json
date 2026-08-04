@@ -1,0 +1,192 @@
+{
+  "name": "Prospecting - Subagent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You find Sales Prospects based on a specific query from the user. You use the tool firecrawl to search the internet and scrape websites to find the best potencial clients for the user, and also use the tool hunter to find the most likely email address for the prospects, and respond with 3 sales prospects.",
+          "maxIterations": 30
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "87557d9f-5f18-48b9-b890-5eb7ba9c4d33",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"prospects\": [ \n    {\n  \"firstname\": \"the prospect's first name here\",\n  \"lastname\": \"their last name\",\n  \"company\": \"where they work\",\n  \"role\": \"what they do\",\n  \"email\": \"predicted email address for this prospect\",\n  \"rationale\": \"why this prospect is qualified as a potencial client\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        224
+      ],
+      "id": "5bf00309-02fc-42d4-bb29-7a77ba4e4661",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to verify and retrive the most likely email address by the options found by the ai agent",
+        "operation": "emailFinder",
+        "domain": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Domain', ``, 'string') }}",
+        "firstname": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('First_Name', ``, 'string') }}",
+        "lastname": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Last_Name', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.hunterTool",
+      "typeVersion": 1,
+      "position": [
+        528,
+        224
+      ],
+      "id": "d2cfc4b8-0de3-46e3-9f67-b6b5682378a2",
+      "name": "Hunter",
+      "credentials": {
+        "hunterApi": {
+          "id": "FUsDytzgQ5bE9uU4",
+          "name": "Hunter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        224
+      ],
+      "id": "423ccad4-1819-425e-8c9e-79018e3c9240",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eGobkKP7yD0BJpbV",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "scrape",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawlTool",
+      "typeVersion": 1,
+      "position": [
+        400,
+        224
+      ],
+      "id": "e8f42f62-7c43-4c1d-b4db-1ef9ebf7cfda",
+      "name": "/scrape in Firecrawl",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "87df8glrXqnTvrJ3",
+          "name": "Firecrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        0
+      ],
+      "id": "57209620-11cc-464e-aba0-a85d9b7687de",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "/scrape in Firecrawl": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d3a0078c-6880-4469-baab-5b9c6f975783",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bebe7effbae9da83617a85467efc76ba989138cd8275fa317b0f4e5f58089e76"
+  },
+  "nodeGroups": [],
+  "id": "3yLvqVdPqbkmfB3E",
+  "tags": []
+}

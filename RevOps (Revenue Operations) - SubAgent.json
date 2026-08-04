@@ -1,0 +1,232 @@
+{
+  "name": "RevOps (Revenue Operations) - SubAgent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.sales_lead_description }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Based on the input from the user which describes a sales lead, you should reply with a structured version of the lead. Your reply will be sent to Pipedrive to create a lead record."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "0338916d-99f2-41ce-a853-6bd4de5e1d56",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        224
+      ],
+      "id": "7ad054ad-bb6b-4405-a4f5-6d1c32b73789",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eGobkKP7yD0BJpbV",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"name\": \"The full name of the lead\",\n  \"company\": \"The company where they work\",\n  \"role\": \"Their job title\",\n  \"email\": \"Their email address\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        224
+      ],
+      "id": "25c67e34-60ae-491a-b423-f7d8749ca793",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "resource": "organization",
+        "name": "={{ $json.output.company }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "005e65aa-fe8a-4834-ba1b-6aad55a1ddc0",
+      "name": "Create an organization",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "tOVlmvFY5ViGFWZn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "person",
+        "name": "={{ $('AI Agent').item.json.output.name }}",
+        "additionalFields": {
+          "emails": {
+            "emailProperties": [
+              {
+                "value": "={{ $('AI Agent').item.json.output.email }}"
+              }
+            ]
+          },
+          "org_id": "={{ $json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        784,
+        0
+      ],
+      "id": "417b2a7e-0060-4196-9b1c-8b323d761885",
+      "name": "Create a person",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "tOVlmvFY5ViGFWZn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "title": "={{ $('AI Agent').item.json.output.name }}",
+        "organization_id": "={{ $('Create an organization').item.json.id }}",
+        "additionalFields": {
+          "person_id": "={{ $json.id }}",
+          "visible_to": "1"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "299a1493-b7fd-4271-ace1-34f49b8ef39b",
+      "name": "Create a lead",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "tOVlmvFY5ViGFWZn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "sales_lead_description"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "fe56244b-17e1-4110-89a9-7bdb7d5dfa5f",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create an organization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an organization": {
+      "main": [
+        [
+          {
+            "node": "Create a person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a person": {
+      "main": [
+        [
+          {
+            "node": "Create a lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "731d8e05-66dd-466b-862d-545329169e02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bebe7effbae9da83617a85467efc76ba989138cd8275fa317b0f4e5f58089e76"
+  },
+  "nodeGroups": [],
+  "id": "uyJ39PGwVehyinzI",
+  "tags": []
+}

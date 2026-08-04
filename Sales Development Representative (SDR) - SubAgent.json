@@ -1,0 +1,160 @@
+{
+  "name": "Sales Development Representative (SDR) - SubAgent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an SDR. You use your tool to read all the person records in the pipedrive CRM; for each person, use your tool to create a Draft Email from Raul Sordi (the CTO of Accounting firm AccountAI) to pitch AccountAi's innovative accounting software products. The email should be professionally formatted in HTML. Explain in the email that if people are interested, they should call (19) 9 9724 5688 to speak with our AI agent and schedule a demo.\nDo not include any additional details about AccountAI or the software that you do not know, simply state that it is innovative accounting software that will streamline costs and drive efficiency.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        0
+      ],
+      "id": "155c7e0f-c5be-4819-a6f1-d64769fa6116",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        224
+      ],
+      "id": "d87c20b2-035f-44da-ac40-398196c133ea",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eGobkKP7yD0BJpbV",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "person",
+        "operation": "getAll",
+        "returnAll": true,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [
+        352,
+        224
+      ],
+      "id": "4bcab6be-6f5a-470f-891e-7821c87cff9a",
+      "name": "Get many persons in Pipedrive",
+      "credentials": {
+        "pipedriveApi": {
+          "id": "tOVlmvFY5ViGFWZn",
+          "name": "Pipedrive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "html",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To_Email', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        224
+      ],
+      "id": "3e88b436-4ad2-4a1e-868d-5e998e7a4831",
+      "name": "Create a draft in Gmail",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "dAcBz47kE0JAYGDw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        0
+      ],
+      "id": "d0ae061a-18e0-4c0b-a55b-f4275d8ca708",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many persons in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7b10d940-a9b9-4037-a722-1d5527e155ad",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bebe7effbae9da83617a85467efc76ba989138cd8275fa317b0f4e5f58089e76"
+  },
+  "nodeGroups": [],
+  "id": "5uDAFMi7jxgXOGrR",
+  "tags": []
+}

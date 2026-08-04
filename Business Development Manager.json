@@ -1,0 +1,459 @@
+{
+  "name": "Business Development Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "YOUR_RESOURCE_ID",
+          "mode": "list",
+          "cachedResultName": "Ideal Customer Profile (ICP) File Drop",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/YOUR_RESOURCE_ID"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        336,
+        -64
+      ],
+      "id": "2f022b72-9c38-48e8-8c26-185c75891f51",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ECLNyvoTwrn3l9Ne",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "YOUR_RESOURCE_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        -64
+      ],
+      "id": "3e808033-95df-4ee0-bf7f-184a309e53e2",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ECLNyvoTwrn3l9Ne",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        -64
+      ],
+      "id": "b733e2a9-6c9f-42f4-bf61-48887726113b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Sales Manager Agent for a Accounting Software firm, AccountAI.\n\nYou are provided with the ICP for an ideal prospect.\nYou must carry out these steps:\n\nFirst, use your Prospecting subagent tool once to search online for leads, providing a query based on the ICP.\n\nNext for each of the identifield prospects, use your RevOps Subagent tool to store the information on the Pipedrive CRM database. Use the tool repeatedly once for each prospect.\n\nFinally, use your SDR subagent tool once; this tool retrieve everyone in pipedrive and draft an outbound sales email for all of them.\n\nThen reply with a summary of the outcome."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1168,
+        -64
+      ],
+      "id": "bdec4a71-988f-486f-b40e-4633906d312b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        160
+      ],
+      "id": "cdc9bae4-3e65-4a9c-9d08-7ed707d9af48",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eGobkKP7yD0BJpbV",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this prospecting tool to search the internet for leads and also use prospecting tools to predict their email address. This tool will return lead information.",
+        "workflowId": {
+          "__rl": true,
+          "value": "3yLvqVdPqbkmfB3E",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/3yLvqVdPqbkmfB3E",
+          "cachedResultName": "Prospecting - Subagent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('query', `A description of the prospect`, 'string') }}"
+          },
+          "matchingColumns": [
+            "query"
+          ],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        160
+      ],
+      "id": "c2ede2c9-8452-4ccd-892d-c6524fced264",
+      "name": "Call 'Prospecting - Subagent'"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to save a Sales Lead in the Pipedrive CRM database. Describe the prospect / lead, providing their name, company, role and email address. Call thid yool separately for each prospect to be saved.",
+        "workflowId": {
+          "__rl": true,
+          "value": "uyJ39PGwVehyinzI",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/uyJ39PGwVehyinzI",
+          "cachedResultName": "RevOps (Revenue Operations) - SubAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sales_lead_description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sales_lead_description', `a description of the sales lead including their name, email address, company and role`, 'string') }}"
+          },
+          "matchingColumns": [
+            "sales_lead_description"
+          ],
+          "schema": [
+            {
+              "id": "sales_lead_description",
+              "displayName": "sales_lead_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        160
+      ],
+      "id": "27b133cb-3951-4300-ab1d-2bd420c6321a",
+      "name": "Call 'RevOps (Revenue Operations) - SubAgent'"
+    },
+    {
+      "parameters": {
+        "description": "This tool generates SDR Sales Outreach Emails to all prospects that have been loaded into Pipedrive CRM. Call this tool one time to generate all draft emails. Call this tool once to retrieve multiple sales prospects.",
+        "workflowId": {
+          "__rl": true,
+          "value": "5uDAFMi7jxgXOGrR",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/5uDAFMi7jxgXOGrR",
+          "cachedResultName": "Sales Development Representative (SDR) - SubAgent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        160
+      ],
+      "id": "3c698947-702a-42bd-a768-e437681228b9",
+      "name": "Call 'Sales Development Representative (SDR) - SubAgent'"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"success\": true,\n  \"summary\": \"a concise description of what happend\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1504,
+        160
+      ],
+      "id": "1d6e22af-8044-4417-8509-f0609b1e857b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1d7f3bae-e484-451f-a404-0dda7687a486",
+              "leftValue": "={{ $json.output.success }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1680,
+        -64
+      ],
+      "id": "f58c887f-bca1-4274-af2f-39ac77920112",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "={{ $json.output.summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1904,
+        -160
+      ],
+      "id": "fed83329-ebb2-4283-9324-8523818b9c6b",
+      "name": "Send a text message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "WqgoH7jgMwikknUf",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "={{ $json.output.summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1904,
+        32
+      ],
+      "id": "10fcc0f6-11ac-4a1a-9806-81320e701172",
+      "name": "Send a text message1",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "WqgoH7jgMwikknUf",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Prospecting - Subagent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'RevOps (Revenue Operations) - SubAgent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Sales Development Representative (SDR) - SubAgent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "70a0c298-82c6-4a19-ac97-daae9e957726",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bebe7effbae9da83617a85467efc76ba989138cd8275fa317b0f4e5f58089e76"
+  },
+  "nodeGroups": [],
+  "id": "IF7C3MMDiHreAmNK",
+  "tags": []
+}
