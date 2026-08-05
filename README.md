@@ -39,6 +39,8 @@ Once a lead receives the outreach email and calls back, an **ElevenLabs conversa
 
 Both subagents report their outcome back through Telegram and respond to the calling webhook so the voice agent knows how to continue the conversation.
 
+![Workflow execution demo](workflow_demo_2.png)
+
 ## Tech Stack
 
 - **Automation:** [n8n](https://n8n.io/) (self-hosted, Docker)
