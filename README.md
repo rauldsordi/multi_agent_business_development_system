@@ -26,6 +26,8 @@ The manager calls three subagents, in order, each exposed as a tool:
 
 Each subagent is a **separate n8n workflow**, called as a tool by the orchestrator's AI Agent — not a hardcoded linear chain of nodes. This keeps responsibilities isolated and each subagent independently testable.
 
+![Workflow execution demo](workflow_demo.png)
+
 ### 2. Account Executive Layer (Voice Agent)
 
 Once a lead receives the outreach email and calls back, an **ElevenLabs conversational agent** answers the call and handles the booking flow. It also follows a fixed sequence, with a fallback for scheduling conflicts:
